@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080e1a">
+<title>KiteSpot Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080e1a;--sf:#0f1729;--sf2:#151f35;--sf3:#1a2844;
+  --tx:#e4e8f1;--dim:#6b7fa3;--acc:#ff5e45;--acc2:#ff8a6e;
+  --teal:#00dab5;--gold:#ffc53d;--sky:#3d9eff;--cold:#7080a8;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100%;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:540px;margin:0 auto}
+
+/* === PAGES === */
+.page{display:none;padding-bottom:24px;min-height:100vh}
+.page.active{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* === SEARCH BAR === */
+.search-wrap{padding:0 1rem;margin-bottom:1rem}
+.search-box{display:flex;gap:8px;background:var(--sf);border-radius:14px;padding:6px;border:1px solid var(--sf3);transition:border-color .2s}
+.search-box:focus-within{border-color:var(--acc)}
+.search-box input{flex:1;background:transparent;border:none;outline:none;color:var(--tx);font-size:.88rem;font-family:'Outfit',sans-serif;padding:8px 10px}
+.search-box input::placeholder{color:var(--dim)}
+.search-btn{background:var(--sf3);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:background .15s}
+.search-btn.ready{background:var(--acc)}
+.search-btn.ready:active{background:var(--acc2);transform:scale(.96)}
+.error-msg{margin-top:8px;font-size:.78rem;color:var(--acc);padding:8px 12px;background:rgba(255,94,69,.08);border-radius:8px}
+
+/* === SUGGESTIONS === */
+.suggestions{padding:0 1rem;margin-bottom:1rem}
+.sug-label{font-size:.62rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.sug-chips{display:flex;gap:6px;flex-wrap:wrap}
+.sug-chip{background:var(--sf2);border:1px solid var(--sf3);border-radius:8px;padding:5px 10px;color:var(--dim);font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.sug-chip:active{background:var(--sf3);color:var(--tx);transform:scale(.95)}
+
+/* === SPOT CARD (list) === */
+.spot-list{padding:0 1rem;display:flex;flex-direction:column;gap:10px}
+.spot-count{font-size:.62rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.scard{background:var(--sf);border-radius:16px;padding:16px;cursor:pointer;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.scard:active{transform:scale(.98)}
+.scard-top{display:flex;justify-content:space-between;align-items:flex-start}
+.scard h3{font-size:1.3rem;font-weight:800;letter-spacing:-.01em}
+.scard .country{font-size:.7rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.scard .arrow{color:var(--dim);font-size:1.2rem}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.tag{font-size:.6rem;font-weight:600;padding:3px 8px;border-radius:6px}
+.tag-w{color:var(--teal);background:rgba(0,218,181,.1)}
+.tag-t{color:var(--gold);background:rgba(255,197,61,.1)}
+.tag-s{color:var(--acc);background:rgba(255,94,69,.1)}
+.tag-d{color:var(--dim);background:var(--sf2)}
+
+/* Mini wind chart */
+.mini-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:12px}
+.mini-bar{height:28px;background:var(--sf2);border-radius:4px;position:relative;overflow:hidden}
+.mini-fill{position:absolute;bottom:0;left:0;right:0;border-radius:4px}
+.mini-lbl{font-family:'Space Mono',monospace;font-size:.4rem;text-align:center;margin-top:2px;color:var(--dim)}
+
+/* === DETAIL PAGE === */
+.detail-back{display:flex;align-items:center;gap:6px;padding:16px;color:var(--acc);font-size:.8rem;font-weight:600;cursor:pointer;background:none;border:none;font-family:'Outfit',sans-serif;-webkit-tap-highlight-color:transparent}
+.detail-header{text-align:center;padding:.5rem 1rem 1.5rem}
+.detail-header h1{font-size:2.4rem;font-weight:800;letter-spacing:-.02em;line-height:1;color:#fff}
+.detail-country{font-size:.8rem;color:var(--acc);font-weight:600;text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
+.detail-meta{color:var(--dim);font-size:.76rem;margin-top:6px}
+.detail-coords{display:inline-block;font-family:'Space Mono',monospace;font-size:.62rem;color:var(--dim);background:var(--sf);padding:3px 10px;border-radius:12px;margin-top:6px}
+
+.best-banner{margin:0 12px;background:linear-gradient(135deg,var(--sf2),var(--sf3));border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:16px;text-align:center}
+.best-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:8px}
+.best-pills{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+.best-pill{background:var(--acc);color:#fff;font-size:.75rem;font-weight:800;padding:3px 10px;border-radius:6px}
+.best-verdict{font-size:.82rem;color:var(--dim);font-style:italic;line-height:1.4}
+
+.section-hdr{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);text-align:center;margin:20px 0 10px}
+
+/* Month grid mobile */
+.month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 10px}
+.mc{background:var(--sf);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid transparent}
+.mc.best{border-color:var(--acc);background:linear-gradient(180deg,var(--sf3),var(--sf))}
+.mc-name{font-size:.72rem;font-weight:800;margin-bottom:6px}
+.mc.best .mc-name{color:var(--acc)}
+.mc-wind{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700}
+.mc-wind small{font-size:.55rem;font-weight:400}
+.mc-bar{width:100%;height:4px;background:var(--sf2);border-radius:2px;overflow:hidden;margin:4px 0}
+.mc-bar-fill{height:100%;border-radius:2px}
+.mc-row{display:flex;justify-content:space-between;font-size:.6rem;margin:3px 0}
+.mc-row-l{color:var(--dim)}
+.mc-row-v{font-weight:700}
+.mc-dots{display:flex;gap:2px;justify-content:center;margin:5px 0}
+.mc-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.08)}
+.mc-dot.on{background:var(--gold)}
+.mc-ride{font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:4px;display:inline-block}
+
+/* Stats */
+.stat-list{padding:0 10px;display:flex;flex-direction:column;gap:6px}
+.stat-row{background:var(--sf);border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px}
+.stat-icon{font-size:1.3rem}
+.stat-val{font-size:.9rem;font-weight:700;color:#fff}
+.stat-sub{font-size:.68rem;color:var(--dim);margin-top:1px}
+
+/* Travel */
+.travel-list{padding:0 10px;display:flex;flex-direction:column;gap:6px}
+.travel-card{background:var(--sf);border-radius:12px;padding:14px}
+.travel-card h4{font-size:.8rem;color:var(--acc);font-weight:700;margin-bottom:4px}
+.travel-card p{font-size:.76rem;color:var(--dim);line-height:1.5}
+
+/* Footer */
+.detail-footer{text-align:center;padding:20px 12px;margin-top:12px}
+.conf-row{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.73rem;color:var(--dim)}
+.conf-bar{width:80px;height:5px;background:var(--sf2);border-radius:3px;overflow:hidden}
+.conf-fill{height:100%;border-radius:3px}
+.detail-src{font-size:.58rem;color:rgba(255,255,255,.15);margin-top:5px}
+
+/* Delete btn */
+.delete-btn{margin-top:16px;background:rgba(255,94,69,.08);color:var(--acc);border:1px solid rgba(255,94,69,.15);border-radius:10px;padding:10px 20px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif}
+.delete-btn:active{background:rgba(255,94,69,.15)}
+
+/* === LOADING === */
+.loading-wrap{text-align:center;padding:3rem 1.5rem}
+.loading-kite{font-size:3rem;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.loading-title{font-size:1rem;font-weight:700;color:#fff;margin:.8rem 0 1.5rem}
+.loading-steps{max-width:280px;margin:0 auto;text-align:left}
+.loading-step{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.76rem;transition:opacity .5s,color .3s}
+.loading-step.done{color:var(--teal);opacity:1}
+.loading-step.active{color:var(--teal);opacity:1}
+.loading-step.pending{color:var(--dim);opacity:.25}
+.progress-track{width:200px;height:3px;background:var(--sf2);border-radius:3px;margin:2rem auto 0;overflow:hidden}
+.progress-bar{width:40%;height:100%;background:linear-gradient(90deg,var(--acc),var(--teal));border-radius:3px;animation:slide 1.5s ease infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem;margin:.6rem .8rem;font-size:.58rem;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div class="page active" id="page-home">
+  <div style="text-align:center;padding:2rem 1.2rem 1rem">
+    <div style="font-size:2.5rem">🪁</div>
+    <h1 style="font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:4px 0">Kite<span style="color:var(--acc)">Spot</span> Guide</h1>
+    <p style="color:var(--dim);font-size:.85rem">Wind, weather & travel intel for riders</p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Rechercher un spot... (ex: Tarifa, Dakhla)" autocomplete="off">
+      <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍</button>
+    </div>
+    <div id="errorMsg" class="error-msg" style="display:none"></div>
+  </div>
+
+  <div class="suggestions" id="suggestionsWrap">
+    <div class="sug-label">💡 Suggestions</div>
+    <div class="sug-chips" id="sugChips"></div>
+  </div>
+
+  <div class="spot-list" id="spotList"></div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div class="page" id="page-loading">
+  <div class="loading-wrap">
+    <div class="loading-kite">🪁</div>
+    <div class="loading-title" id="loadingTitle">Researching...</div>
+    <div class="loading-steps" id="loadingSteps"></div>
+    <div class="progress-track"><div class="progress-bar"></div></div>
+  </div>
+</div>
+
+<!-- ===== DETAIL ===== -->
+<div class="page" id="page-detail">
+  <button class="detail-back" onclick="showHome()">← Spots</button>
+  <div id="detailContent"></div>
+</div>
+
+<script>
+// ============================
+// DATA
+// ============================
+const MO = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const SUGGESTIONS = ['Tarifa','Dakhla','Cape Town','Cumbuco','Mui Ne','El Gouna','Essaouira','Cabarete','Lancelin','Boracay','Le Morne','Fuerteventura'];
+
+let spots = [
+  {
+    id:'prea',name:'Preá',country:'Ceará, Brazil',coords:'2.79°S, 40.41°W',
+    type:'Ocean beach',level:'Intermediate → Advanced',windDir:'Side-onshore (E/ESE/SE)',
+    verdict:'One of the windiest spots in NE Brazil — relentless 20-30kt trade winds, warm water, endless sandy beach, and the legendary downwinder to Jericoacoara.',
+    stats:[
+      {icon:'💨',val:'20–30 kt',sub:'E / ESE / SE · side-onshore',color:'#00dab5'},
+      {icon:'🌊',val:'Choppy + waves ≤2m',sub:'Flat water at Barrinha (4mi)',color:''},
+      {icon:'🌡️',val:'26–29°C',sub:'Water temp · no wetsuit',color:'#3d9eff'},
+      {icon:'🪁',val:'7–12m²',sub:'Kite sizes',color:''},
+      {icon:'📅',val:'Jul → Jan',sub:'Peak Aug–Nov',color:'#ff5e45'}
+    ],
+    travel:[
+      {title:'Getting There',text:'Fly Fortaleza (FOR). ~270km west, 4h drive. Last stretch unpaved.'},
+      {title:'Accommodation',text:'Pousadas — Rancho do Peixe beachfront. No ATM.'},
+      {title:'Vibe',text:'Fishing village, starry nights. Jeri 20 min for nightlife.'},
+      {title:'Pro Tips',text:'Wait until ~11am. Do the downwinder to Jeri. Tide-dependent.'}
+    ],
+    confidence:85,sources:'Windfinder, Windy, IKO, brazil-kitesurf.com',
+    months:[
+      {wind:20,dir:'ESE',air:30,water:28,rain:11,crowd:3,ride:70,best:false},
+      {wind:15,dir:'E',air:30,water:28,rain:15,crowd:2,ride:55,best:false},
+      {wind:11,dir:'E',air:30,water:29,rain:22,crowd:1,ride:30,best:false},
+      {wind:10,dir:'E',air:30,water:29,rain:24,crowd:1,ride:20,best:false},
+      {wind:11,dir:'E',air:30,water:28,rain:18,crowd:1,ride:25,best:false},
+      {wind:16,dir:'ESE',air:29,water:27,rain:10,crowd:2,ride:60,best:false},
+      {wind:21,dir:'ESE',air:29,water:27,rain:4,crowd:3,ride:85,best:false},
+      {wind:25,dir:'ESE',air:29,water:26,rain:1,crowd:4,ride:95,best:true},
+      {wind:28,dir:'SE',air:30,water:26,rain:1,crowd:4,ride:97,best:true},
+      {wind:30,dir:'SE',air:31,water:27,rain:2,crowd:5,ride:97,best:true},
+      {wind:29,dir:'SE',air:31,water:27,rain:2,crowd:5,ride:96,best:true},
+      {wind:23,dir:'ESE',air:31,water:28,rain:6,crowd:4,ride:90,best:true}
+    ]
+  }
+];
+
+// ============================
+// HELPERS
+// ============================
+const wC = k => k<12?'#7080a8':k<18?'#3d9eff':k<23?'#00dab5':k<31?'#ff5e45':'#ffc53d';
+const tC = t => t>=30?'#ff5e45':t>=24?'#ffc53d':t>=18?'#00dab5':'#3d9eff';
+const rS = r => r>=70?'background:rgba(0,218,181,.12);color:#00dab5':r>=40?'background:rgba(61,158,255,.12);color:#3d9eff':'background:rgba(112,128,168,.1);color:#7080a8';
+const rE = d => d<=4?'☀️':d<=10?'🌦':'🌧';
+const dots = n => Array.from({length:5},(_,i)=>`<span class="mc-dot${i<n?' on':''}"></span>`).join('');
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showHome() { showPage('home'); renderHome(); }
+
+// ============================
+// RENDER HOME
+// ============================
+function renderHome() {
+  // Suggestions (hide already loaded ones)
+  const loaded = new Set(spots.map(s => s.name.toLowerCase()));
+  const filtered = SUGGESTIONS.filter(s => !loaded.has(s.toLowerCase()));
+  const chips = document.getElementById('sugChips');
+  chips.innerHTML = filtered.map(s => `<button class="sug-chip" onclick="triggerSearch('${s}')">${s}</button>`).join('');
+  document.getElementById('suggestionsWrap').style.display = filtered.length ? 'block' : 'none';
+
+  // Spot list
+  const list = document.getElementById('spotList');
+  list.innerHTML = `<div class="spot-count">📌 ${spots.length} spot${spots.length>1?'s':''}</div>` +
+    spots.map((s,idx) => {
+      const mx = Math.max(...s.months.map(m=>m.wind));
+      const bc = s.months.filter(m=>m.best).length;
+      const wMin = Math.min(...s.months.map(m=>m.water));
+      const wMax = Math.max(...s.months.map(m=>m.water));
+      const mini = s.months.map((m,i) =>
+        `<div><div class="mini-bar"><div class="mini-fill" style="height:${m.wind/35*100}%;background:${wC(m.wind)}"></div></div><div class="mini-lbl">${MO[i][0]}</div></div>`
+      ).join('');
+      return `<div class="scard" onclick="openSpot(${idx})">
+        <div class="scard-top"><div><h3>${s.name}</h3><div class="country">${s.country}</div></div><span class="arrow">→</span></div>
+        <div class="tags">
+          <span class="tag tag-w">💨 ${mx}kt max</span>
+          <span class="tag tag-t">🌡️ ${wMin}–${wMax}°C</span>
+          <span class="tag tag-s">📅 ${bc} best months</span>
+          <span class="tag tag-d">${s.type}</span>
+        </div>
+        <div class="mini-grid">${mini}</div>
+      </div>`;
+    }).join('');
+}
+
+// ============================
+// RENDER DETAIL
+// ============================
+function openSpot(idx) {
+  const s = spots[idx];
+  const bestN = s.months.map((m,i)=>m.best?MO[i]:null).filter(Boolean);
+  const cL = s.confidence>=80?'High':s.confidence>=60?'Med-High':s.confidence>=40?'Medium':'Low';
+  const cC = s.confidence>=70?'#00dab5':s.confidence>=40?'#ffc53d':'#7080a8';
+
+  const mCards = s.months.map((m,i)=>`
+    <div class="mc${m.best?' best':''}">
+      <div class="mc-name" style="color:${m.best?'var(--acc)':'var(--dim)'}">${MO[i]}</div>
+      <div class="mc-wind" style="color:${wC(m.wind)}">${m.wind}<small>kt</small></div>
+      <div class="mc-bar"><div class="mc-bar-fill" style="width:${Math.min(m.wind/35*100,100)}%;background:${wC(m.wind)}"></div></div>
+      <div class="mc-row"><span class="mc-row-l">Air</span><span class="mc-row-v" style="color:${tC(m.air)}">${m.air}°</span></div>
+      <div class="mc-row"><span class="mc-row-l">Water</span><span class="mc-row-v" style="color:${tC(m.water)}">${m.water}°</span></div>
+      <div class="mc-row"><span class="mc-row-l">Rain</span><span class="mc-row-v">${rE(m.rain)} ${m.rain}d</span></div>
+      <div class="mc-dots">${dots(m.crowd)}</div>
+      <span class="mc-ride" style="${rS(m.ride)}">${m.ride}%</span>
+    </div>
+  `).join('');
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <h1>${s.name}</h1>
+      <div class="detail-country">${s.country}</div>
+      <div class="detail-meta">🌊 ${s.type} · 🏄 ${s.level} · 💨 ${s.windDir}</div>
+      <div class="detail-coords">${s.coords}</div>
+    </div>
+    <div class="best-banner">
+      <div class="best-label">⭐ Best Months</div>
+      <div class="best-pills">${bestN.map(n=>`<span class="best-pill">${n}</span>`).join('')}</div>
+      <div class="best-verdict">"${s.verdict}"</div>
+    </div>
+    <div class="section-hdr">📊 Monthly Breakdown</div>
+    <div class="month-grid">${mCards}</div>
+    <div class="legend"><span>💨 Wind</span><span>🌡️ Temp</span><span>🌧 Rain</span><span>👥 Crowd</span><span>📈 Rideable</span></div>
+    <div class="section-hdr">🔑 Key Stats</div>
+    <div class="stat-list">${s.stats.map(st=>`
+      <div class="stat-row">
+        <span class="stat-icon">${st.icon}</span>
+        <div><div class="stat-val" ${st.color?`style="color:${st.color}"`:''} >${st.val}</div><div class="stat-sub">${st.sub}</div></div>
+      </div>
+    `).join('')}</div>
+    <div class="section-hdr">✈️ Travel Info</div>
+    <div class="travel-list">${s.travel.map(t=>`
+      <div class="travel-card"><h4>${t.title}</h4><p>${t.text}</p></div>
+    `).join('')}</div>
+    <div class="detail-footer">
+      <div class="conf-row">
+        <span>Data Confidence:</span>
+        <div class="conf-bar"><div class="conf-fill" style="width:${s.confidence}%;background:${cC}"></div></div>
+        <span style="font-weight:700;color:${cC}">${cL}</span>
+      </div>
+      <div class="detail-src">${s.sources}</div>
+      ${s.id!=='prea'?`<button class="delete-btn" onclick="deleteSpot(${idx})">🗑 Supprimer ce spot</button>`:''}
+    </div>`;
+  showPage('detail');
+}
+
+function deleteSpot(idx) {
+  if (confirm('Supprimer ' + spots[idx].name + ' ?')) {
+    spots.splice(idx, 1);
+    showHome();
+  }
+}
+
+// ============================
+// SEARCH
+// ============================
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const errorMsg = document.getElementById('errorMsg');
+
+searchInput.addEventListener('input', () => {
+  searchBtn.className = searchInput.value.trim() ? 'search-btn ready' : 'search-btn';
+});
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+function triggerSearch(name) {
+  searchInput.value = name;
+  searchBtn.className = 'search-btn ready';
+  doSearch();
+}
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  errorMsg.style.display = 'none';
+
+  // Already exists?
+  const exists = spots.find(s => s.name.toLowerCase() === q.toLowerCase());
+  if (exists) { openSpot(spots.indexOf(exists)); searchInput.value = ''; return; }
+
+  // Show loading
+  showPage('loading');
+  document.getElementById('loadingTitle').textContent = `Researching ${q}`;
+  const stepsEl = document.getElementById('loadingSteps');
+  const stepTexts = [
+    `🔍 Searching wind data for ${q}...`,
+    '🌊 Checking wave & water conditions...',
+    '🌡️ Gathering temperature statistics...',
+    '✈️ Compiling travel intel...',
+    '📊 Building your spot card...'
+  ];
+  let currentStep = 0;
+  stepsEl.innerHTML = stepTexts.map((s,i) => `<div class="loading-step ${i===0?'active':'pending'}">${i===0?'⟳':'○'} ${s}</div>`).join('');
+  const stepInterval = setInterval(() => {
+    currentStep++;
+    if (currentStep < stepTexts.length) {
+      const els = stepsEl.querySelectorAll('.loading-step');
+      els.forEach((el,i) => {
+        if (i < currentStep) { el.className='loading-step done'; el.innerHTML='✓ '+stepTexts[i]; }
+        else if (i === currentStep) { el.className='loading-step active'; el.innerHTML='⟳ '+stepTexts[i]; }
+      });
+    }
+  }, 2800);
+
+  try {
+    const prompt = `You are a kitesurf spot data researcher. Search the web for comprehensive kitesurf and wind/weather data about "${q}".
+
+Find: monthly average wind speed (knots), dominant wind direction, air temperature (°C), water temperature (°C), rainy days per month, crowd level (1-5 scale), rideable days percentage, spot type, skill level needed, best months, travel info, and any rider tips.
+
+RESPOND ONLY IN THIS EXACT JSON FORMAT, nothing else, no markdown, no backticks:
+{"name":"Spot Name","country":"Region, Country","coords":"lat, lon in degrees","type":"Ocean beach | Lagoon | Bay | Lake","level":"Intermediate → Advanced","windDir":"dominant wind direction","verdict":"One compelling sentence for kiters","stats":[{"icon":"💨","val":"wind range kt","sub":"direction details","color":"#00dab5"},{"icon":"🌊","val":"wave/water conditions","sub":"details","color":"#3d9eff"},{"icon":"🌡️","val":"water temp range °C","sub":"wetsuit info","color":"#3d9eff"},{"icon":"🪁","val":"kite size range m²","sub":"recommendation","color":""},{"icon":"📅","val":"season months","sub":"peak info","color":"#ff5e45"}],"travel":[{"title":"Getting There","text":"..."},{"title":"Accommodation","text":"..."},{"title":"Vibe","text":"..."},{"title":"Pro Tips","text":"..."}],"confidence":70,"sources":"comma separated","months":[{"wind":18,"dir":"N","air":25,"water":22,"rain":5,"crowd":3,"ride":60,"best":false}]}
+
+IMPORTANT: months array MUST have exactly 12 entries (Jan-Dec). All wind in knots. Temps in Celsius. Rideable % = days with 12+ knots. Be honest about confidence (0-100). Use real data.`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+      })
+    });
+
+    const data = await resp.json();
+    clearInterval(stepInterval);
+
+    // Extract text
+    const fullText = data.content.map(c => c.type==='text'?c.text:'').filter(Boolean).join('\n');
+    const clean = fullText.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    if (!parsed.months || parsed.months.length !== 12) throw new Error('Bad data');
+
+    const newSpot = {
+      id: q.toLowerCase().replace(/[^a-z0-9]/g,'-')+'-'+Date.now(),
+      name: parsed.name || q,
+      country: parsed.country || 'Unknown',
+      coords: parsed.coords || '',
+      type: parsed.type || 'Ocean beach',
+      level: parsed.level || 'Intermediate',
+      windDir: parsed.windDir || '',
+      verdict: parsed.verdict || '',
+      stats: parsed.stats || [],
+      travel: parsed.travel || [],
+      confidence: Number(parsed.confidence) || 50,
+      sources: parsed.sources || 'Web search',
+      months: parsed.months.map(m => ({
+        wind: Number(m.wind)||0, dir: m.dir||'', air: Number(m.air)||25,
+        water: Number(m.water)||22, rain: Number(m.rain)||5,
+        crowd: Math.min(5,Math.max(1,Number(m.crowd)||2)),
+        ride: Math.min(100,Math.max(0,Number(m.ride)||0)),
+        best: Boolean(m.best)
+      }))
+    };
+
+    spots.unshift(newSpot);
+    searchInput.value = '';
+    openSpot(0);
+  } catch (err) {
+    clearInterval(stepInterval);
+    console.error(err);
+    errorMsg.textContent = `Impossible de trouver les données pour "${q}". Essaie un nom de spot connu (ex: Tarifa, Dakhla, Cape Town...).`;
+    errorMsg.style.display = 'block';
+    showHome();
+  }
+}
+
+// ============================
+// INIT
+// ============================
+renderHome();
+</script>
+</body>
+</html>
